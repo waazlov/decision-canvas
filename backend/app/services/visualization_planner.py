@@ -14,15 +14,31 @@ def _format_enum(value: str) -> ValueFormat:
     return ValueFormat(metric_format_for_field(value))
 
 
+def _aggregate_chart_series(
+    dataframe: pd.DataFrame,
+    date_column: str,
+    metric_column: str,
+    metric: str,
+) -> pd.DataFrame:
+    chart_frame = dataframe[[date_column, metric_column]].dropna().sort_values(date_column).copy()
+    chart_frame["chart_date"] = pd.to_datetime(chart_frame[date_column]).dt.strftime("%Y-%m-%d")
+    aggregated = (
+        chart_frame.groupby("chart_date")[metric_column].mean()
+        if metric in {"conversion", "aov"}
+        else chart_frame.groupby("chart_date")[metric_column].sum()
+    )
+    return aggregated.reset_index().rename(columns={"chart_date": "x", metric_column: "y"}).tail(24)
+
+
 def _build_trend_chart(dataframe: pd.DataFrame, field_map: dict[str, str], finding: Finding) -> ChartSpec | None:
     date_column = field_map.get("date")
     metric_column = field_map.get(finding.metric)
     if not date_column or not metric_column:
         return None
 
-    chart_frame = dataframe[[date_column, metric_column]].dropna().sort_values(date_column).copy()
-    chart_frame["period"] = pd.to_datetime(chart_frame[date_column]).dt.strftime("%Y-%m-%d")
-    chart_data = chart_frame.rename(columns={"period": "x", metric_column: "y"})[["x", "y"]].tail(24)
+    chart_data = _aggregate_chart_series(dataframe, date_column, metric_column, finding.metric)
+    if chart_data.empty:
+        return None
 
     return ChartSpec(
         id=f"chart_{finding.id}",
@@ -39,6 +55,38 @@ def _build_trend_chart(dataframe: pd.DataFrame, field_map: dict[str, str], findi
         series=[ChartSeries(name=finding.metric.replace("_", " ").title(), field="y")],
         data=chart_data.to_dict(orient="records"),
         annotation=ChartAnnotation(label=finding.title, x_value=chart_data.iloc[-1]["x"], y_value=chart_data.iloc[-1]["y"]),
+    )
+
+
+def _build_anomaly_chart(dataframe: pd.DataFrame, field_map: dict[str, str], finding: Finding) -> ChartSpec | None:
+    date_column = field_map.get("date")
+    metric_column = field_map.get(finding.metric)
+    if not date_column or not metric_column:
+        return None
+
+    chart_data = _aggregate_chart_series(dataframe, date_column, metric_column, finding.metric)
+    if chart_data.empty:
+        return None
+
+    anomaly_x = finding.segment or chart_data.iloc[-1]["x"]
+    anomaly_row = chart_data[chart_data["x"] == anomaly_x]
+    anomaly_y = float(anomaly_row.iloc[-1]["y"]) if not anomaly_row.empty else chart_data["y"].max()
+
+    return ChartSpec(
+        id=f"chart_{finding.id}",
+        template=ChartTemplate.LINE,
+        title=f"{finding.metric.replace('_', ' ').title()} anomaly timeline",
+        subtitle=finding.title,
+        reason_for_selection="A line chart with an explicit anomaly callout shows when the unusual movement occurred and how sharply it deviated.",
+        x_axis=AxisSpec(field="x", label="Date", format=ValueFormat.STRING),
+        y_axis=AxisSpec(
+            field="y",
+            label=finding.metric.replace("_", " ").title(),
+            format=_format_enum(finding.metric),
+        ),
+        series=[ChartSeries(name=finding.metric.replace("_", " ").title(), field="y")],
+        data=chart_data.to_dict(orient="records"),
+        annotation=ChartAnnotation(label="Detected anomaly", x_value=anomaly_x, y_value=anomaly_y),
     )
 
 
@@ -148,9 +196,14 @@ def plan_charts(
     interpretation: QuestionInterpretation,
 ) -> list[ChartSpec]:
     charts: list[ChartSpec] = []
+    chart_metrics: set[tuple[str, str]] = set()
     for finding in findings:
         chart = None
-        if finding.type in {FindingType.TREND_DROP, FindingType.TREND_GROWTH, FindingType.ANOMALY}:
+        if finding.type == FindingType.ANOMALY:
+            chart = _build_anomaly_chart(dataframe, field_map, finding)
+        elif finding.type in {FindingType.TREND_DROP, FindingType.TREND_GROWTH}:
+            if interpretation.intent == QuestionIntent.ANOMALY_DETECTION and (finding.metric, "anomaly") in chart_metrics:
+                continue
             chart = _build_trend_chart(dataframe, field_map, finding)
         elif finding.type in {FindingType.SEGMENT_UNDERPERFORMANCE, FindingType.SEGMENT_OUTPERFORMANCE}:
             chart = _build_segment_chart(dataframe, field_map, finding, interpretation)
@@ -159,6 +212,9 @@ def plan_charts(
 
         if chart:
             charts.append(chart)
+            chart_metrics.add((finding.metric, finding.type))
+            if finding.type == FindingType.ANOMALY:
+                chart_metrics.add((finding.metric, "anomaly"))
         if len(charts) == 5:
             break
 

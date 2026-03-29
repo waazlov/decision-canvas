@@ -44,7 +44,7 @@ export function WorkspacePage() {
       <PageHeader
         eyebrow="Workspace"
         title="Upload, inspect, and frame the question"
-        description="Move from raw CSV to a decision-ready dashboard through one guided workflow."
+        description="Move from raw CSV to a decision-ready dashboard through one guided workflow built for specific analytics questions."
         actions={
           fileName ? (
             <button className="button button--secondary" type="button" onClick={resetWorkspace}>
@@ -80,6 +80,10 @@ export function WorkspacePage() {
               {profile.column_count} columns.
             </div>
           ) : null}
+          <div className="status-banner status-banner--subtle">
+            Supported question types: trend changes, top or weak segments, anomalies, comparisons,
+            and funnel drop-offs.
+          </div>
           <QuestionComposer
             exampleQuestions={exampleQuestions}
             isSubmitting={isAnalyzing}

@@ -124,11 +124,6 @@ export function ChartRenderer({ chart }: { chart: ChartSpec }) {
         <span className="pill pill--neutral">{chart.template.replace("_", " ")}</span>
       </div>
 
-      <div className="chart-meta">
-        <span>{chart.x_axis?.label ?? "X-axis"}</span>
-        <span>{chart.y_axis?.label ?? "Y-axis"}</span>
-      </div>
-
       {content}
 
       <div className="chart-footer">

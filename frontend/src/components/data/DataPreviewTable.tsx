@@ -23,7 +23,7 @@ export function DataPreviewTable({ profile }: DataPreviewTableProps) {
           <p>No dataset loaded yet. Upload a CSV to preview the first rows.</p>
         </div>
       ) : (
-        <div className="table-scroll">
+        <div className="table-scroll table-scroll--contained">
           <table className="data-table">
             <thead>
               <tr>

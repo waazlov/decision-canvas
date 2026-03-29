@@ -20,22 +20,33 @@ export function QuestionComposer({
       <div className="section-heading">
         <div>
           <p className="section-heading__eyebrow">Step 2</p>
-          <h2>Ask a business question</h2>
+          <h2>Choose a supported analysis question</h2>
         </div>
       </div>
 
       <div className="question-composer">
         <p className="question-helper">
-          Ask about trends, top segments, drop-offs, or anomalies.
+          Best results come from questions about trends, top or weak segments, drop-offs, comparisons, or anomalies.
         </p>
+        <div className="supported-question-types" aria-label="Supported question types">
+          <span className="tag">Trends</span>
+          <span className="tag">Top segments</span>
+          <span className="tag">Underperformance</span>
+          <span className="tag">Comparisons</span>
+          <span className="tag">Drop-offs</span>
+          <span className="tag">Anomalies</span>
+        </div>
         <textarea
-          placeholder="Why did conversion drop last month?"
+          placeholder="Example: Which region performs best?"
           rows={4}
           value={question}
           onChange={(event) => onQuestionChange?.(event.target.value)}
         />
         <p className="question-helper question-helper--subtle">
-          DecisionCanvas routes your question into a specific analysis path and falls back to an overview when confidence is low.
+          DecisionCanvas maps your prompt to a supported analysis path. If the question is vague or unsupported, it falls back to a broader overview instead of pretending certainty.
+        </p>
+        <p className="question-helper question-helper--subtle">
+          It does not yet answer arbitrary business questions perfectly, so use the suggested prompts as a guide.
         </p>
 
         <div className="preset-list">
