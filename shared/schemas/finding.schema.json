@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Finding",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "type",
+    "title",
+    "metric",
+    "confidence",
+    "explanation",
+    "recommended_action",
+    "evidence",
+    "assumptions",
+    "uncertainty_notes"
+  ],
+  "properties": {
+    "id": { "type": "string" },
+    "type": {
+      "type": "string",
+      "enum": [
+        "trend_drop",
+        "trend_growth",
+        "segment_outperformance",
+        "segment_underperformance",
+        "anomaly",
+        "funnel_dropoff",
+        "relationship"
+      ]
+    },
+    "title": { "type": "string" },
+    "metric": { "type": "string" },
+    "segment": { "type": ["string", "null"] },
+    "time_window": {
+      "type": ["object", "null"],
+      "additionalProperties": false,
+      "properties": {
+        "current_start": { "type": ["string", "null"] },
+        "current_end": { "type": ["string", "null"] },
+        "comparison_start": { "type": ["string", "null"] },
+        "comparison_end": { "type": ["string", "null"] }
+      }
+    },
+    "value": { "type": ["number", "null"] },
+    "comparison_value": { "type": ["number", "null"] },
+    "magnitude_pct": { "type": ["number", "null"] },
+    "confidence": { "type": "string", "enum": ["low", "medium", "high"] },
+    "explanation": { "type": "string" },
+    "recommended_action": { "type": "string" },
+    "evidence": { "type": "array", "items": { "type": "string" } },
+    "assumptions": { "type": "array", "items": { "type": "string" } },
+    "uncertainty_notes": { "type": "array", "items": { "type": "string" } }
+  }
+}

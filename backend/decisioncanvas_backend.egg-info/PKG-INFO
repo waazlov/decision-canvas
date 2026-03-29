@@ -1,0 +1,17 @@
+Metadata-Version: 2.4
+Name: decisioncanvas-backend
+Version: 0.1.0
+Summary: FastAPI backend for DecisionCanvas
+Requires-Python: >=3.11
+Requires-Dist: fastapi<1.0.0,>=0.115.0
+Requires-Dist: uvicorn[standard]<1.0.0,>=0.30.0
+Requires-Dist: pandas<3.0.0,>=2.2.0
+Requires-Dist: numpy<3.0.0,>=2.0.0
+Requires-Dist: python-multipart<1.0.0,>=0.0.9
+Requires-Dist: pydantic<3.0.0,>=2.8.0
+Requires-Dist: pydantic-settings<3.0.0,>=2.3.0
+Requires-Dist: scipy<2.0.0,>=1.14.0
+Provides-Extra: dev
+Requires-Dist: httpx<1.0.0,>=0.27.0; extra == "dev"
+Requires-Dist: pytest<9.0.0,>=8.3.0; extra == "dev"
+Requires-Dist: pytest-cov<6.0.0,>=5.0.0; extra == "dev"

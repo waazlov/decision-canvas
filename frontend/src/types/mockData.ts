@@ -1,0 +1,182 @@
+import type { DashboardPayload } from "./contracts";
+
+export const sampleDashboard: DashboardPayload = {
+  dashboard_title: "Why Did Conversion Drop Last Month",
+  question: "Why did conversion drop last month?",
+  dataset_profile: {
+    dataset_name: "ecommerce_demo.csv",
+    row_count: 16,
+    column_count: 7,
+    preview_rows: [
+      {
+        date: "2026-01-05",
+        device: "Mobile",
+        region: "West",
+        category: "Accessories",
+        sessions: 1200,
+        orders: 54,
+        revenue: 5400,
+      },
+    ],
+    columns: [],
+    candidate_metrics: ["revenue", "orders", "sessions", "derived_conversion_rate"],
+    candidate_dimensions: ["date", "device", "region", "category"],
+    data_quality_issues: [],
+    assumptions: [
+      "conversion_rate is derived as orders / sessions because no explicit conversion column exists.",
+    ],
+  },
+  kpis: [
+    {
+      label: "Revenue",
+      value: 25950,
+      format: "currency",
+      delta_pct: -10.68,
+      comparison_label: "vs prior period",
+    },
+    {
+      label: "Orders",
+      value: 379,
+      format: "integer",
+      delta_pct: -11.45,
+      comparison_label: "vs prior period",
+    },
+    {
+      label: "Sessions",
+      value: 8885,
+      format: "integer",
+      delta_pct: 0.62,
+      comparison_label: "vs prior period",
+    },
+    {
+      label: "Conversion",
+      value: 0.0425,
+      format: "percentage",
+      delta_pct: -15.94,
+      comparison_label: "vs prior period",
+    },
+  ],
+  findings: [
+    {
+      id: "finding_001",
+      type: "trend_drop",
+      title: "Conversion declined in the latest period",
+      metric: "conversion",
+      segment: null,
+      time_window: {
+        current_start: "2026-02",
+        current_end: "2026-02",
+        comparison_start: "2026-01",
+        comparison_end: "2026-01",
+      },
+      value: 0.0425,
+      comparison_value: 0.0506,
+      magnitude_pct: -15.94,
+      confidence: "high",
+      explanation: "The latest month is materially below the prior month, with the largest pressure concentrated in mobile performance.",
+      recommended_action: "Investigate mobile UX friction, landing page relevance, and campaign quality for the affected period.",
+      evidence: ["Current value: 0.0425", "Comparison value: 0.0506"],
+      assumptions: [
+        "conversion_rate is derived as orders / sessions because no explicit conversion column exists.",
+      ],
+      uncertainty_notes: [
+        "Findings are based on available tabular data and should not be interpreted as confirmed causality.",
+      ],
+    },
+    {
+      id: "finding_002",
+      type: "segment_underperformance",
+      title: "Mobile underperforms on conversion",
+      metric: "conversion",
+      segment: "Mobile",
+      value: 0.0342,
+      comparison_value: 0.0425,
+      magnitude_pct: -19.53,
+      confidence: "high",
+      explanation: "Mobile conversion lags the overall baseline, indicating the decline is not distributed evenly across traffic.",
+      recommended_action: "Prioritize UX improvements for the weakest device experience and review conversion blockers.",
+      evidence: ["Current value: 0.0342", "Comparison value: 0.0425", "Dimension analyzed: device"],
+      assumptions: [],
+      uncertainty_notes: [
+        "No session replay or event-level checkout data is available to confirm the exact failure point.",
+      ],
+    },
+  ],
+  charts: [
+    {
+      id: "chart_finding_001",
+      template: "line",
+      title: "Conversion trend",
+      subtitle: "Month-over-month conversion movement",
+      reason_for_selection: "A line chart best communicates how the metric changed over time.",
+      x_axis: {
+        field: "x",
+        label: "Date",
+        format: "string",
+      },
+      y_axis: {
+        field: "y",
+        label: "Conversion",
+        format: "percentage",
+      },
+      series: [{ name: "Conversion", field: "y" }],
+      data: [
+        { x: "2026-01-05", y: 0.0503 },
+        { x: "2026-01-12", y: 0.0491 },
+        { x: "2026-01-19", y: 0.0489 },
+        { x: "2026-01-26", y: 0.0498 },
+        { x: "2026-02-02", y: 0.0431 },
+        { x: "2026-02-09", y: 0.0407 },
+        { x: "2026-02-16", y: 0.0407 },
+        { x: "2026-02-23", y: 0.0422 },
+      ],
+      annotation: {
+        label: "Sharpest decline phase",
+        x_value: "2026-02-09",
+        y_value: 0.0407,
+      },
+    },
+    {
+      id: "chart_finding_002",
+      template: "bar",
+      title: "Conversion by device",
+      subtitle: "Mobile trails desktop",
+      reason_for_selection: "A bar chart makes segment underperformance easy to compare against peers.",
+      x_axis: {
+        field: "x",
+        label: "Device",
+        format: "string",
+      },
+      y_axis: {
+        field: "y",
+        label: "Conversion",
+        format: "percentage",
+      },
+      series: [{ name: "Conversion", field: "y" }],
+      data: [
+        { x: "Desktop", y: 0.0532 },
+        { x: "Mobile", y: 0.0342 },
+      ],
+      annotation: {
+        label: "Weakest segment",
+        x_value: "Mobile",
+        y_value: 0.0342,
+      },
+    },
+  ],
+  executive_summary: {
+    what_happened: "Conversion declined month over month, with the steepest drag coming from mobile traffic.",
+    why_it_likely_happened: "Performance fell despite relatively stable traffic volumes, which suggests lower order completion rather than demand loss.",
+    what_to_do_next: [
+      "Review mobile landing page and checkout friction.",
+      "Compare paid traffic quality between January and February.",
+      "Check whether category mix shifted toward lower-converting segments.",
+    ],
+    assumptions: [
+      "Sessions and orders form the primary conversion funnel.",
+    ],
+    uncertainty_notes: [
+      "No event-level behavioral data or campaign spend data is available in the sample payload.",
+    ],
+  },
+};

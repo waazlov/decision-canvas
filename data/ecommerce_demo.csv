@@ -1,0 +1,17 @@
+date,device,region,category,sessions,orders,revenue
+2026-01-05,Mobile,West,Accessories,1200,54,5400
+2026-01-05,Desktop,West,Accessories,900,50,6100
+2026-01-12,Mobile,East,Apparel,1300,57,5900
+2026-01-12,Desktop,East,Apparel,980,53,6500
+2026-01-19,Mobile,South,Home,1280,56,5750
+2026-01-19,Desktop,South,Home,960,52,6320
+2026-01-26,Mobile,North,Accessories,1250,55,5600
+2026-01-26,Desktop,North,Accessories,940,51,6200
+2026-02-02,Mobile,West,Accessories,1235,44,4510
+2026-02-02,Desktop,West,Accessories,910,49,6010
+2026-02-09,Mobile,East,Apparel,1290,42,4350
+2026-02-09,Desktop,East,Apparel,990,52,6460
+2026-02-16,Mobile,South,Home,1270,41,4290
+2026-02-16,Desktop,South,Home,975,50,6250
+2026-02-23,Mobile,North,Accessories,1260,43,4410
+2026-02-23,Desktop,North,Accessories,955,51,6330

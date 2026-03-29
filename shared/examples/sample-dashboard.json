@@ -1,0 +1,125 @@
+{
+  "dashboard_title": "Why Did Conversion Drop Last Month",
+  "question": "Why did conversion drop last month?",
+  "dataset_profile": {
+    "dataset_name": "ecommerce_demo.csv",
+    "row_count": 16,
+    "column_count": 7,
+    "preview_rows": [
+      {
+        "date": "2026-01-05",
+        "device": "Mobile",
+        "region": "West",
+        "category": "Accessories",
+        "sessions": 1200,
+        "orders": 54,
+        "revenue": 5400
+      }
+    ],
+    "columns": [
+      {
+        "name": "date",
+        "detected_type": "date",
+        "semantic_role": "time_dimension",
+        "null_pct": 0,
+        "unique_count": 8,
+        "sample_values": ["2026-01-05", "2026-01-12"]
+      }
+    ],
+    "candidate_metrics": ["orders", "revenue", "sessions"],
+    "candidate_dimensions": ["category", "date", "device", "region"],
+    "data_quality_issues": [],
+    "assumptions": [
+      "conversion_rate can be derived as orders / sessions because no explicit conversion column exists."
+    ]
+  },
+  "kpis": [
+    {
+      "label": "Revenue",
+      "value": 41390.0,
+      "format": "currency",
+      "delta_pct": -10.68,
+      "comparison_label": "vs prior period"
+    }
+  ],
+  "findings": [
+    {
+      "id": "finding_001",
+      "type": "trend_drop",
+      "title": "Conversion declined in the latest period",
+      "metric": "conversion",
+      "segment": null,
+      "time_window": {
+        "current_start": "2026-02",
+        "current_end": "2026-02",
+        "comparison_start": "2026-01",
+        "comparison_end": "2026-01"
+      },
+      "value": 0.042544,
+      "comparison_value": 0.05061,
+      "magnitude_pct": -15.94,
+      "confidence": "high",
+      "explanation": "The latest period is 15.94% below the previous comparable period.",
+      "recommended_action": "Investigate UX friction, landing page performance, and campaign quality for the affected period.",
+      "evidence": [
+        "Current value: 0.042544",
+        "Comparison value: 0.05061"
+      ],
+      "assumptions": [
+        "conversion_rate is derived as orders / sessions because no explicit conversion column exists."
+      ],
+      "uncertainty_notes": [
+        "Findings are based on available tabular data and should not be interpreted as confirmed causality."
+      ]
+    }
+  ],
+  "charts": [
+    {
+      "id": "chart_finding_001",
+      "template": "line",
+      "title": "Conversion trend",
+      "subtitle": "Conversion declined in the latest period",
+      "reason_for_selection": "A line chart best communicates how the metric changed over time.",
+      "x_axis": {
+        "field": "x",
+        "label": "Date",
+        "format": "string"
+      },
+      "y_axis": {
+        "field": "y",
+        "label": "Conversion",
+        "format": "percentage"
+      },
+      "series": [
+        {
+          "name": "Conversion",
+          "field": "y"
+        }
+      ],
+      "data": [
+        {
+          "x": "2026-02-23",
+          "y": 0.044213
+        }
+      ],
+      "annotation": {
+        "label": "Conversion declined in the latest period",
+        "x_value": "2026-02-23",
+        "y_value": 0.044213
+      }
+    }
+  ],
+  "executive_summary": {
+    "what_happened": "Conversion declined in the latest period",
+    "why_it_likely_happened": "The latest period is 15.94% below the previous comparable period.",
+    "what_to_do_next": [
+      "Investigate UX friction, landing page performance, and campaign quality for the affected period."
+    ],
+    "assumptions": [
+      "conversion_rate is derived as orders / sessions because no explicit conversion column exists."
+    ],
+    "uncertainty_notes": [
+      "Recommendations are directional and should be validated with additional business context before execution."
+    ]
+  }
+}

@@ -1,0 +1,73 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "DatasetProfile",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "dataset_name",
+    "row_count",
+    "column_count",
+    "preview_rows",
+    "columns",
+    "candidate_metrics",
+    "candidate_dimensions",
+    "data_quality_issues",
+    "assumptions"
+  ],
+  "properties": {
+    "dataset_name": { "type": "string" },
+    "row_count": { "type": "integer", "minimum": 0 },
+    "column_count": { "type": "integer", "minimum": 0 },
+    "preview_rows": {
+      "type": "array",
+      "maxItems": 10,
+      "items": { "type": "object" }
+    },
+    "columns": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "detected_type", "semantic_role", "null_pct", "unique_count", "sample_values"],
+        "properties": {
+          "name": { "type": "string" },
+          "detected_type": {
+            "type": "string",
+            "enum": ["string", "integer", "float", "boolean", "date", "datetime", "unknown"]
+          },
+          "semantic_role": {
+            "type": "string",
+            "enum": ["time_dimension", "dimension", "metric", "identifier", "funnel_stage", "unknown"]
+          },
+          "null_pct": { "type": "number", "minimum": 0, "maximum": 100 },
+          "unique_count": { "type": "integer", "minimum": 0 },
+          "sample_values": {
+            "type": "array",
+            "items": { "type": "string" },
+            "maxItems": 5
+          }
+        }
+      }
+    },
+    "candidate_metrics": { "type": "array", "items": { "type": "string" } },
+    "candidate_dimensions": { "type": "array", "items": { "type": "string" } },
+    "data_quality_issues": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["type", "severity", "message"],
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": ["missing_values", "mixed_types", "duplicates", "date_parse", "high_cardinality", "unsupported"]
+          },
+          "column": { "type": ["string", "null"] },
+          "severity": { "type": "string", "enum": ["low", "medium", "high"] },
+          "message": { "type": "string" }
+        }
+      }
+    },
+    "assumptions": { "type": "array", "items": { "type": "string" } }
+  }
+}

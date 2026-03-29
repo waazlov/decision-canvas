@@ -1,0 +1,61 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ChartSpec",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "template", "title", "reason_for_selection", "series", "data"],
+  "properties": {
+    "id": { "type": "string" },
+    "template": {
+      "type": "string",
+      "enum": ["kpi_card", "line", "bar", "grouped_bar", "scatter", "funnel", "heatmap"]
+    },
+    "title": { "type": "string" },
+    "subtitle": { "type": ["string", "null"] },
+    "reason_for_selection": { "type": "string" },
+    "x_axis": {
+      "type": ["object", "null"],
+      "additionalProperties": false,
+      "properties": {
+        "field": { "type": "string" },
+        "label": { "type": "string" },
+        "format": { "type": "string", "enum": ["number", "currency", "percentage", "integer", "string"] }
+      }
+    },
+    "y_axis": {
+      "type": ["object", "null"],
+      "additionalProperties": false,
+      "properties": {
+        "field": { "type": "string" },
+        "label": { "type": "string" },
+        "format": { "type": "string", "enum": ["number", "currency", "percentage", "integer", "string"] }
+      }
+    },
+    "series": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "field"],
+        "properties": {
+          "name": { "type": "string" },
+          "field": { "type": "string" }
+        }
+      }
+    },
+    "data": {
+      "type": "array",
+      "maxItems": 500,
+      "items": { "type": "object" }
+    },
+    "annotation": {
+      "type": ["object", "null"],
+      "additionalProperties": false,
+      "properties": {
+        "label": { "type": "string" },
+        "x_value": { "type": ["string", "number", "integer", "null"] },
+        "y_value": { "type": ["number", "integer", "null"] }
+      }
+    }
+  }
+}

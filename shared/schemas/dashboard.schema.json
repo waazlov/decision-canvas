@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "DashboardPayload",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "dashboard_title",
+    "question",
+    "dataset_profile",
+    "kpis",
+    "findings",
+    "charts",
+    "executive_summary"
+  ],
+  "properties": {
+    "dashboard_title": { "type": "string" },
+    "question": { "type": "string" },
+    "dataset_profile": { "$ref": "./dataset-profile.schema.json" },
+    "kpis": {
+      "type": "array",
+      "maxItems": 8,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["label", "value", "format"],
+        "properties": {
+          "label": { "type": "string" },
+          "value": { "type": ["string", "number", "integer"] },
+          "format": { "type": "string", "enum": ["number", "currency", "percentage", "integer", "string"] },
+          "delta_pct": { "type": ["number", "null"] },
+          "comparison_label": { "type": ["string", "null"] }
+        }
+      }
+    },
+    "findings": {
+      "type": "array",
+      "maxItems": 10,
+      "items": { "$ref": "./finding.schema.json" }
+    },
+    "charts": {
+      "type": "array",
+      "maxItems": 5,
+      "items": { "$ref": "./chart-spec.schema.json" }
+    },
+    "executive_summary": { "$ref": "./executive-summary.schema.json" }
+  }
+}
