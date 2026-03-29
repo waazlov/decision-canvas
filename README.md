@@ -98,7 +98,7 @@ The frontend runs on `http://localhost:5173`.
 
 ### Demo Data
 
-Use the sample dataset at [`data/ecommerce_demo.csv`](C:\Users\waazlov\Documents\Work\Codex Project\decision-canvas\data\ecommerce_demo.csv).
+Use the sample dataset at `data/ecommerce_demo.csv`.
 
 ### Demo Mode
 
@@ -121,9 +121,9 @@ DecisionCanvas is set up for:
 
 This repo includes:
 
-- [`backend/requirements.txt`](C:\Users\waazlov\Documents\Work\Codex Project\decision-canvas\backend\requirements.txt)
-- [`backend/runtime.txt`](C:\Users\waazlov\Documents\Work\Codex Project\decision-canvas\backend\runtime.txt)
-- [`render.yaml`](C:\Users\waazlov\Documents\Work\Codex Project\decision-canvas\render.yaml)
+- `backend/requirements.txt`
+- `backend/runtime.txt`
+- `render.yaml`
 
 You can deploy with the Render blueprint or configure manually:
 
@@ -159,8 +159,8 @@ Expected response:
 
 This repo includes:
 
-- [`frontend/.env.example`](C:\Users\waazlov\Documents\Work\Codex Project\decision-canvas\frontend\.env.example)
-- [`frontend/vercel.json`](C:\Users\waazlov\Documents\Work\Codex Project\decision-canvas\frontend\vercel.json)
+- `frontend/.env.example`
+- `frontend/vercel.json`
 
 Deploy with these steps:
 
