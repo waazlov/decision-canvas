@@ -6,6 +6,7 @@ from app.models.base import StrictBaseModel
 from app.models.charts import ChartSpec, KPI
 from app.models.dataset import DatasetProfile
 from app.models.findings import Finding
+from app.models.question import QuestionInterpretation
 
 
 class ExecutiveSummary(StrictBaseModel):
@@ -19,6 +20,7 @@ class ExecutiveSummary(StrictBaseModel):
 class DashboardPayload(StrictBaseModel):
     dashboard_title: str
     question: str
+    interpreted_question: QuestionInterpretation
     dataset_profile: DatasetProfile
     kpis: list[KPI] = Field(default_factory=list, max_length=8)
     findings: list[Finding] = Field(default_factory=list, max_length=10)

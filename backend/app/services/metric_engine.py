@@ -56,11 +56,24 @@ def prepare_analysis_frame(dataframe: pd.DataFrame) -> tuple[pd.DataFrame, dict[
         conversion_column = field_map["conversion"]
         working_frame[conversion_column] = pd.to_numeric(working_frame[conversion_column], errors="coerce")
 
+    if "aov" not in field_map and {"revenue", "orders"}.issubset(field_map):
+        revenue_column = field_map["revenue"]
+        orders_column = field_map["orders"]
+        safe_orders = working_frame[orders_column].replace({0: np.nan})
+        working_frame["derived_aov"] = working_frame[revenue_column] / safe_orders
+        field_map["aov"] = "derived_aov"
+        assumptions.append(
+            "aov is derived as revenue / orders because no explicit average order value column exists."
+        )
+    elif "aov" in field_map:
+        aov_column = field_map["aov"]
+        working_frame[aov_column] = pd.to_numeric(working_frame[aov_column], errors="coerce")
+
     return working_frame, field_map, assumptions
 
 
 def pick_primary_metric(field_map: dict[str, str]) -> str | None:
-    for business_field in ("revenue", "conversion", "orders", "sessions"):
+    for business_field in ("revenue", "conversion", "orders", "sessions", "aov"):
         if business_field in field_map:
             return business_field
     return None
@@ -73,6 +86,7 @@ def pick_metric_for_question(field_map: dict[str, str], question: str) -> str | 
         ("revenue", ("revenue", "sales", "gmv")),
         ("orders", ("orders", "purchases")),
         ("sessions", ("sessions", "traffic", "visits")),
+        ("aov", ("aov", "average order value", "avg order value")),
     )
 
     for metric, keywords in priority_by_keyword:
@@ -83,7 +97,7 @@ def pick_metric_for_question(field_map: dict[str, str], question: str) -> str | 
 
 
 def metric_format_for_field(business_field: str) -> str:
-    if business_field == "revenue":
+    if business_field in {"revenue", "aov"}:
         return "currency"
     if business_field == "conversion":
         return "percentage"
@@ -99,7 +113,7 @@ def summarize_kpis(
     kpis: list[dict[str, Any]] = []
     date_column = field_map.get("date")
 
-    for business_field in ("revenue", "orders", "sessions", "conversion"):
+    for business_field in ("revenue", "orders", "sessions", "conversion", "aov"):
         column = field_map.get(business_field)
         if not column or column not in dataframe.columns:
             continue
@@ -108,13 +122,17 @@ def summarize_kpis(
         if series.empty:
             continue
 
-        value = float(series.mean()) if business_field == "conversion" else float(series.sum())
+        value = float(series.mean()) if business_field in {"conversion", "aov"} else float(series.sum())
         delta_pct = None
 
         if date_column and dataframe[date_column].notna().any():
             dated = dataframe[[date_column, column]].dropna().sort_values(date_column)
             dated["period"] = dated[date_column].dt.to_period("M")
-            period_summary = dated.groupby("period")[column].mean() if business_field == "conversion" else dated.groupby("period")[column].sum()
+            period_summary = (
+                dated.groupby("period")[column].mean()
+                if business_field in {"conversion", "aov"}
+                else dated.groupby("period")[column].sum()
+            )
             if len(period_summary) >= 2:
                 previous = float(period_summary.iloc[-2])
                 current = float(period_summary.iloc[-1])

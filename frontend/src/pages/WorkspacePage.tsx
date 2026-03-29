@@ -9,9 +9,9 @@ import { useWorkspace } from "../app/WorkspaceContext";
 
 const exampleQuestions = [
   { id: "q1", label: "Why did conversion drop last month?" },
-  { id: "q2", label: "Which segments drive the most revenue?" },
+  { id: "q2", label: "Which region performs best?" },
   { id: "q3", label: "Where in the funnel are users dropping off?" },
-  { id: "q4", label: "Which regions underperform?" },
+  { id: "q4", label: "What changed recently?" },
 ];
 
 export function WorkspacePage() {

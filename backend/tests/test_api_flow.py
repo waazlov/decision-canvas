@@ -21,5 +21,6 @@ def test_upload_to_dashboard_api_flow() -> None:
     assert response.status_code == 200
     payload = response.json()
     assert payload["dashboard_title"] == "Why Did Conversion Drop Last Month"
+    assert payload["interpreted_question"]["intent"] == "trend_analysis"
     assert payload["findings"]
     assert 1 <= len(payload["charts"]) <= 5

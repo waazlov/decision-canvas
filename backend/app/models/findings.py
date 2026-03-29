@@ -35,6 +35,7 @@ class Finding(StrictBaseModel):
     type: FindingType
     title: str
     metric: str
+    dimension: str | None = None
     segment: str | None = None
     time_window: TimeWindow | None = None
     value: float | None = None

@@ -2,10 +2,17 @@ from __future__ import annotations
 
 from typing import Any
 
-import numpy as np
 import pandas as pd
 
-from app.services.metric_engine import pick_metric_for_question
+from app.models.question import (
+    AnalysisPlan,
+    AnalysisStep,
+    QuestionDirection,
+    QuestionIntent,
+    QuestionInterpretation,
+    QuestionTimeScope,
+)
+from app.services.metric_engine import pick_metric_for_question, pick_primary_metric
 
 
 def _period_granularity(date_series: pd.Series) -> str:
@@ -17,34 +24,58 @@ def _period_granularity(date_series: pd.Series) -> str:
     return "D"
 
 
-def _period_granularity_for_question(date_series: pd.Series, question: str) -> str:
-    question_lower = question.lower()
-    if "month" in question_lower:
+def _granularity_for_scope(date_series: pd.Series, time_scope: QuestionTimeScope, question: str) -> str:
+    if time_scope == QuestionTimeScope.LAST_MONTH:
         return "M"
-    if "week" in question_lower:
+    if time_scope == QuestionTimeScope.LAST_WEEK:
         return "W"
-    if "day" in question_lower or "daily" in question_lower:
+    if "day" in question.lower() or "daily" in question.lower():
         return "D"
     return _period_granularity(date_series)
 
 
-def analyze_trends(dataframe: pd.DataFrame, field_map: dict[str, str], question: str) -> list[dict[str, Any]]:
+def _resolve_metric(
+    field_map: dict[str, str],
+    interpretation: QuestionInterpretation,
+) -> str | None:
+    if interpretation.metric and interpretation.metric in field_map:
+        return interpretation.metric
+    fallback_metric = pick_metric_for_question(field_map, interpretation.raw_question)
+    return fallback_metric or pick_primary_metric(field_map)
+
+
+def _candidate_dimensions(field_map: dict[str, str], interpretation: QuestionInterpretation) -> list[str]:
+    ordered_dimensions = [interpretation.dimension] if interpretation.dimension else []
+    ordered_dimensions.extend(["region", "device", "category", "channel"])
+    return [dimension for dimension in dict.fromkeys(ordered_dimensions) if dimension and dimension in field_map]
+
+
+def _aggregate_metric(
+    grouped: pd.core.groupby.SeriesGroupBy,
+    metric: str,
+) -> pd.Series:
+    return grouped.mean() if metric in {"conversion", "aov"} else grouped.sum()
+
+
+def analyze_trends(
+    dataframe: pd.DataFrame,
+    field_map: dict[str, str],
+    interpretation: QuestionInterpretation,
+) -> list[dict[str, Any]]:
     date_column = field_map.get("date")
-    if not date_column or date_column not in dataframe.columns:
+    metric = _resolve_metric(field_map, interpretation)
+    if not date_column or not metric:
         return []
 
-    primary_metric = pick_metric_for_question(field_map, question)
-    if not primary_metric:
-        return []
-
-    metric_column = field_map[primary_metric]
+    metric_column = field_map[metric]
     trend_frame = dataframe[[date_column, metric_column]].dropna().sort_values(date_column)
     if len(trend_frame) < 4:
         return []
 
-    granularity = _period_granularity_for_question(trend_frame[date_column], question)
+    granularity = _granularity_for_scope(trend_frame[date_column], interpretation.time_scope, interpretation.raw_question)
     trend_frame["period"] = trend_frame[date_column].dt.to_period(granularity)
-    aggregated = trend_frame.groupby("period")[metric_column].mean() if primary_metric == "conversion" else trend_frame.groupby("period")[metric_column].sum()
+    grouped = trend_frame.groupby("period")[metric_column]
+    aggregated = _aggregate_metric(grouped, metric)
     if len(aggregated) < 2:
         return []
 
@@ -60,7 +91,9 @@ def analyze_trends(dataframe: pd.DataFrame, field_map: dict[str, str], question:
     return [
         {
             "type": finding_type,
-            "metric": primary_metric,
+            "metric": metric,
+            "dimension": None,
+            "segment": None,
             "value": current_value,
             "comparison_value": previous_value,
             "magnitude_pct": round(delta_pct, 2),
@@ -71,60 +104,114 @@ def analyze_trends(dataframe: pd.DataFrame, field_map: dict[str, str], question:
     ]
 
 
-def analyze_segments(dataframe: pd.DataFrame, field_map: dict[str, str], question: str) -> list[dict[str, Any]]:
-    primary_metric = pick_metric_for_question(field_map, question)
-    if not primary_metric:
+def analyze_segments(
+    dataframe: pd.DataFrame,
+    field_map: dict[str, str],
+    interpretation: QuestionInterpretation,
+    plan: AnalysisPlan,
+) -> list[dict[str, Any]]:
+    metric = _resolve_metric(field_map, interpretation)
+    if not metric:
         return []
 
-    metric_column = field_map[primary_metric]
-    candidate_dimensions = [key for key in ("device", "region", "category") if key in field_map]
+    metric_column = field_map[metric]
     findings: list[dict[str, Any]] = []
 
-    overall_series = dataframe[metric_column].dropna()
-    if overall_series.empty:
-        return []
-    overall_value = float(overall_series.mean()) if primary_metric == "conversion" else float(overall_series.mean())
-
-    for dimension in candidate_dimensions:
+    for dimension in _candidate_dimensions(field_map, interpretation):
         dimension_column = field_map[dimension]
-        grouped = dataframe[[dimension_column, metric_column]].dropna().groupby(dimension_column)[metric_column].mean()
+        grouped = _aggregate_metric(
+            dataframe[[dimension_column, metric_column]].dropna().groupby(dimension_column)[metric_column],
+            metric,
+        )
         if grouped.empty or len(grouped) < 2:
             continue
 
-        worst_segment = grouped.idxmin()
-        worst_value = float(grouped.min())
-        delta_pct = ((worst_value - overall_value) / overall_value) * 100 if overall_value else 0
+        if plan.intent == QuestionIntent.METRIC_COMPARISON and plan.comparison_targets:
+            target_lookup = {target.lower(): target for target in plan.comparison_targets}
+            filtered = grouped[grouped.index.astype(str).str.lower().isin(target_lookup)]
+            if len(filtered) >= 2:
+                ranked = filtered.sort_values(ascending=False)
+                best_segment = str(ranked.index[0])
+                comparison_segment = str(ranked.index[1])
+                best_value = float(ranked.iloc[0])
+                comparison_value = float(ranked.iloc[1])
+                delta_pct = ((best_value - comparison_value) / comparison_value) * 100 if comparison_value else 0
+                findings.append(
+                    {
+                        "type": "segment_outperformance",
+                        "metric": metric,
+                        "dimension": dimension,
+                        "segment": best_segment,
+                        "comparison_segment": comparison_segment,
+                        "value": best_value,
+                        "comparison_value": comparison_value,
+                        "magnitude_pct": round(delta_pct, 2),
+                    }
+                )
+                return findings
+
+        ranked = grouped.sort_values(ascending=False)
+        overall_value = float(grouped.mean())
+
+        if plan.intent == QuestionIntent.SEGMENT_WORST:
+            selected_segment = str(ranked.index[-1])
+            selected_value = float(ranked.iloc[-1])
+            finding_type = "segment_underperformance"
+        else:
+            selected_segment = str(ranked.index[0])
+            selected_value = float(ranked.iloc[0])
+            finding_type = "segment_outperformance"
+
+        delta_pct = ((selected_value - overall_value) / overall_value) * 100 if overall_value else 0
         findings.append(
             {
-                "type": "segment_underperformance",
-                "metric": primary_metric,
+                "type": finding_type,
+                "metric": metric,
                 "dimension": dimension,
-                "segment": str(worst_segment),
-                "value": worst_value,
+                "segment": selected_segment,
+                "value": selected_value,
                 "comparison_value": overall_value,
                 "magnitude_pct": round(delta_pct, 2),
             }
         )
 
+        if plan.intent in {
+            QuestionIntent.SEGMENT_BEST,
+            QuestionIntent.SEGMENT_WORST,
+            QuestionIntent.METRIC_COMPARISON,
+        }:
+            break
+
     return findings
 
 
-def analyze_anomalies(dataframe: pd.DataFrame, field_map: dict[str, str], question: str) -> list[dict[str, Any]]:
+def analyze_anomalies(
+    dataframe: pd.DataFrame,
+    field_map: dict[str, str],
+    interpretation: QuestionInterpretation,
+) -> list[dict[str, Any]]:
     date_column = field_map.get("date")
-    primary_metric = pick_metric_for_question(field_map, question)
-    if not date_column or not primary_metric:
+    metric = _resolve_metric(field_map, interpretation)
+    if not date_column or not metric:
         return []
 
-    metric_column = field_map[primary_metric]
+    metric_column = field_map[metric]
     anomaly_frame = dataframe[[date_column, metric_column]].dropna().sort_values(date_column)
     if len(anomaly_frame) < 8:
         return []
 
-    daily = anomaly_frame.groupby(anomaly_frame[date_column].dt.to_period("D"))[metric_column].mean()
+    daily = _aggregate_metric(
+        anomaly_frame.groupby(anomaly_frame[date_column].dt.to_period("D"))[metric_column],
+        metric,
+    )
     if len(daily) < 8:
         return []
 
-    zscores = (daily - daily.mean()) / daily.std(ddof=0) if daily.std(ddof=0) else daily * 0
+    standard_deviation = daily.std(ddof=0)
+    if not standard_deviation:
+        return []
+
+    zscores = (daily - daily.mean()) / standard_deviation
     flagged = zscores.abs() >= 2.0
     if not flagged.any():
         return []
@@ -132,16 +219,16 @@ def analyze_anomalies(dataframe: pd.DataFrame, field_map: dict[str, str], questi
     anomaly_period = daily.index[flagged][-1]
     anomaly_value = float(daily.loc[anomaly_period])
     anomaly_score = float(zscores.loc[anomaly_period])
+    baseline = float(daily.mean())
     return [
         {
             "type": "anomaly",
-            "metric": primary_metric,
+            "metric": metric,
+            "dimension": None,
             "segment": str(anomaly_period),
             "value": anomaly_value,
-            "comparison_value": float(daily.mean()),
-            "magnitude_pct": round(((anomaly_value - float(daily.mean())) / float(daily.mean())) * 100, 2)
-            if daily.mean()
-            else None,
+            "comparison_value": baseline,
+            "magnitude_pct": round(((anomaly_value - baseline) / baseline) * 100, 2) if baseline else None,
             "anomaly_score": round(anomaly_score, 2),
         }
     ]
@@ -161,6 +248,7 @@ def analyze_funnel(dataframe: pd.DataFrame, field_map: dict[str, str]) -> list[d
         {
             "type": "funnel_dropoff",
             "metric": "orders",
+            "dimension": "stage",
             "segment": "sessions_to_orders",
             "value": orders,
             "comparison_value": sessions,
@@ -169,24 +257,40 @@ def analyze_funnel(dataframe: pd.DataFrame, field_map: dict[str, str]) -> list[d
     ]
 
 
-def run_analysis(dataframe: pd.DataFrame, field_map: dict[str, str], question: str) -> list[dict[str, Any]]:
-    # Question-aware ordering is lightweight and deterministic; it does not invent new analysis paths.
-    question_lower = question.lower()
+def run_analysis(
+    dataframe: pd.DataFrame,
+    field_map: dict[str, str],
+    interpretation: QuestionInterpretation,
+    plan: AnalysisPlan,
+) -> list[dict[str, Any]]:
     ranked_outputs: list[dict[str, Any]] = []
+    for step in plan.steps:
+        if step == AnalysisStep.TREND:
+            ranked_outputs.extend(analyze_trends(dataframe, field_map, interpretation))
+        elif step == AnalysisStep.SEGMENT_RANKING:
+            ranked_outputs.extend(analyze_segments(dataframe, field_map, interpretation, plan))
+        elif step == AnalysisStep.ANOMALY:
+            ranked_outputs.extend(analyze_anomalies(dataframe, field_map, interpretation))
+        elif step == AnalysisStep.FUNNEL:
+            ranked_outputs.extend(analyze_funnel(dataframe, field_map))
 
-    if any(keyword in question_lower for keyword in ("drop", "trend", "month", "week", "performance")):
-        ranked_outputs.extend(analyze_trends(dataframe, field_map, question))
-    if any(keyword in question_lower for keyword in ("segment", "region", "device", "category", "who")):
-        ranked_outputs.extend(analyze_segments(dataframe, field_map, question))
-    if any(keyword in question_lower for keyword in ("anomaly", "spike", "dip", "outlier")):
-        ranked_outputs.extend(analyze_anomalies(dataframe, field_map, question))
-    if any(keyword in question_lower for keyword in ("funnel", "drop-off", "dropoff", "checkout")):
-        ranked_outputs.extend(analyze_funnel(dataframe, field_map))
-
-    if not ranked_outputs:
-        ranked_outputs.extend(analyze_trends(dataframe, field_map, question))
-        ranked_outputs.extend(analyze_segments(dataframe, field_map, question))
-        ranked_outputs.extend(analyze_anomalies(dataframe, field_map, question))
-        ranked_outputs.extend(analyze_funnel(dataframe, field_map))
+    if not ranked_outputs and plan.intent != QuestionIntent.OVERVIEW:
+        overview_plan = AnalysisPlan(
+            intent=QuestionIntent.OVERVIEW,
+            metric=plan.metric,
+            dimension=plan.dimension,
+            direction=QuestionDirection.NEUTRAL,
+            time_scope=plan.time_scope,
+            comparison_targets=plan.comparison_targets,
+            steps=[
+                AnalysisStep.TREND,
+                AnalysisStep.SEGMENT_RANKING,
+                AnalysisStep.ANOMALY,
+                AnalysisStep.FUNNEL,
+            ],
+            fallback_used=True,
+            notes=plan.notes,
+        )
+        return run_analysis(dataframe, field_map, interpretation, overview_plan)
 
     return ranked_outputs

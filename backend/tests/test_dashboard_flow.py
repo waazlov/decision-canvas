@@ -19,6 +19,7 @@ def test_build_dashboard_returns_demo_ready_payload() -> None:
     )
 
     assert dashboard.dashboard_title == "Why Did Conversion Drop Last Month"
+    assert dashboard.interpreted_question.intent == "trend_analysis"
     assert dashboard.kpis
     assert dashboard.findings
     assert 1 <= len(dashboard.charts) <= 5

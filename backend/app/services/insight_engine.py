@@ -3,6 +3,7 @@ from __future__ import annotations
 from itertools import count
 
 from app.models.findings import ConfidenceLevel, Finding, FindingType, TimeWindow
+from app.models.question import QuestionIntent, QuestionInterpretation
 
 
 def _confidence_from_magnitude(magnitude_pct: float | None) -> ConfidenceLevel:
@@ -21,6 +22,17 @@ def _action_for_finding(finding_type: str, metric: str, dimension: str | None = 
         if metric == "revenue":
             return "Review pricing, merchandising, and demand-generation changes that affected the latest period."
         return "Inspect operational or acquisition changes that reduced performance in the latest period."
+    if finding_type == "trend_growth":
+        return "Identify the drivers behind the improvement and determine whether they can be repeated in the next planning cycle."
+    if finding_type == "segment_outperformance":
+        if dimension == "device":
+            return "Use the strongest device experience as a benchmark for weaker device journeys."
+        if dimension == "region":
+            return "Review what the leading region is doing differently in pricing, targeting, or local demand capture."
+        if dimension == "category":
+            return "Validate whether assortment, pricing, or retention drivers from the strongest category can be scaled."
+        if dimension == "channel":
+            return "Audit the highest-performing acquisition channel and test whether its tactics can be expanded efficiently."
     if finding_type == "segment_underperformance":
         if dimension == "device":
             return "Prioritize UX improvements for the weakest device experience and review conversion blockers."
@@ -35,7 +47,11 @@ def _action_for_finding(finding_type: str, metric: str, dimension: str | None = 
     return "Review the affected area and validate the likely driver before making changes."
 
 
-def build_findings(raw_findings: list[dict], assumptions: list[str]) -> list[Finding]:
+def build_findings(
+    raw_findings: list[dict],
+    assumptions: list[str],
+    interpretation: QuestionInterpretation,
+) -> list[Finding]:
     findings: list[Finding] = []
     id_counter = count(1)
 
@@ -50,6 +66,7 @@ def build_findings(raw_findings: list[dict], assumptions: list[str]) -> list[Fin
         title = {
             "trend_drop": f"{metric.replace('_', ' ').title()} declined in the latest period",
             "trend_growth": f"{metric.replace('_', ' ').title()} improved in the latest period",
+            "segment_outperformance": f"{segment} leads on {metric.replace('_', ' ')}",
             "segment_underperformance": f"{segment} underperforms on {metric.replace('_', ' ')}",
             "anomaly": f"Anomalous {metric.replace('_', ' ')} movement detected",
             "funnel_dropoff": "Funnel drop-off detected between sessions and orders",
@@ -58,6 +75,7 @@ def build_findings(raw_findings: list[dict], assumptions: list[str]) -> list[Fin
         explanation = {
             "trend_drop": f"The latest period is {abs(magnitude_pct or 0):.2f}% below the previous comparable period.",
             "trend_growth": f"The latest period is {abs(magnitude_pct or 0):.2f}% above the previous comparable period.",
+            "segment_outperformance": f"{segment} is outperforming the comparison baseline by {abs(magnitude_pct or 0):.2f}%.",
             "segment_underperformance": f"{segment} is underperforming the overall baseline by {abs(magnitude_pct or 0):.2f}%.",
             "anomaly": f"The selected metric deviates materially from its recent baseline with a z-score of {raw.get('anomaly_score', 0):.2f}.",
             "funnel_dropoff": f"Approximately {magnitude_pct or 0:.2f}% of sessions do not reach an order outcome.",
@@ -69,6 +87,17 @@ def build_findings(raw_findings: list[dict], assumptions: list[str]) -> list[Fin
             evidence.append(f"Comparison value: {raw.get('comparison_value')}")
         if dimension:
             evidence.append(f"Dimension analyzed: {dimension}")
+        if raw.get("comparison_segment"):
+            evidence.append(f"Compared against: {raw['comparison_segment']}")
+
+        if interpretation.fallback_used:
+            evidence.append("The question could not be fully resolved, so the dashboard used a broader fallback analysis path.")
+
+        if interpretation.intent == QuestionIntent.METRIC_COMPARISON and raw.get("comparison_segment"):
+            explanation = (
+                f"{segment} leads {raw['comparison_segment']} on {metric.replace('_', ' ')} "
+                f"by {abs(magnitude_pct or 0):.2f}%."
+            )
 
         findings.append(
             Finding(
@@ -76,6 +105,7 @@ def build_findings(raw_findings: list[dict], assumptions: list[str]) -> list[Fin
                 type=finding_type,
                 title=title,
                 metric=metric,
+                dimension=dimension,
                 segment=segment,
                 time_window=TimeWindow(
                     current_start=raw.get("current_period"),

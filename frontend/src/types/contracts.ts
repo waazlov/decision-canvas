@@ -16,6 +16,32 @@ export type SemanticRole =
   | "unknown";
 
 export type ConfidenceLevel = "low" | "medium" | "high";
+export type QuestionIntent =
+  | "trend_analysis"
+  | "segment_best"
+  | "segment_worst"
+  | "anomaly_detection"
+  | "funnel_dropoff"
+  | "metric_comparison"
+  | "overview";
+
+export type QuestionDirection =
+  | "best"
+  | "worst"
+  | "drop"
+  | "growth"
+  | "increase"
+  | "decrease"
+  | "compare"
+  | "neutral";
+
+export type QuestionTimeScope =
+  | "last_week"
+  | "last_month"
+  | "recent"
+  | "over_time"
+  | "all_time"
+  | "unspecified";
 
 export type ChartTemplate =
   | "kpi_card"
@@ -81,6 +107,7 @@ export interface Finding {
     | "relationship";
   title: string;
   metric: string;
+  dimension?: string | null;
   segment?: string | null;
   time_window?: TimeWindow | null;
   value?: number | null;
@@ -140,9 +167,23 @@ export interface ExecutiveSummary {
   uncertainty_notes: string[];
 }
 
+export interface QuestionInterpretation {
+  raw_question: string;
+  intent: QuestionIntent;
+  metric?: string | null;
+  dimension?: string | null;
+  direction: QuestionDirection;
+  time_scope: QuestionTimeScope;
+  comparison_targets: string[];
+  confidence: ConfidenceLevel;
+  fallback_used: boolean;
+  notes: string[];
+}
+
 export interface DashboardPayload {
   dashboard_title: string;
   question: string;
+  interpreted_question: QuestionInterpretation;
   dataset_profile: DatasetProfile;
   kpis: KPI[];
   findings: Finding[];

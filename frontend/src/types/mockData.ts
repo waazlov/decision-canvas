@@ -3,6 +3,18 @@ import type { DashboardPayload } from "./contracts";
 export const sampleDashboard: DashboardPayload = {
   dashboard_title: "Why Did Conversion Drop Last Month",
   question: "Why did conversion drop last month?",
+  interpreted_question: {
+    raw_question: "Why did conversion drop last month?",
+    intent: "trend_analysis",
+    metric: "conversion",
+    dimension: null,
+    direction: "drop",
+    time_scope: "last_month",
+    comparison_targets: [],
+    confidence: "high",
+    fallback_used: false,
+    notes: [],
+  },
   dataset_profile: {
     dataset_name: "ecommerce_demo.csv",
     row_count: 16,
@@ -62,6 +74,7 @@ export const sampleDashboard: DashboardPayload = {
       type: "trend_drop",
       title: "Conversion declined in the latest period",
       metric: "conversion",
+      dimension: null,
       segment: null,
       time_window: {
         current_start: "2026-02",
@@ -88,6 +101,7 @@ export const sampleDashboard: DashboardPayload = {
       type: "segment_underperformance",
       title: "Mobile underperforms on conversion",
       metric: "conversion",
+      dimension: "device",
       segment: "Mobile",
       value: 0.0342,
       comparison_value: 0.0425,
