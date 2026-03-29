@@ -6,7 +6,7 @@ interface SchemaSummaryProps {
 
 export function SchemaSummary({ profile }: SchemaSummaryProps) {
   return (
-    <section className="surface-card">
+    <section className="surface-card surface-card--contained">
       <div className="section-heading">
         <div>
           <p className="section-heading__eyebrow">Schema</p>

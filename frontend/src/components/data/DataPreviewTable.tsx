@@ -9,7 +9,7 @@ export function DataPreviewTable({ profile }: DataPreviewTableProps) {
   const columns = rows.length > 0 ? Object.keys(rows[0]) : [];
 
   return (
-    <section className="surface-card">
+    <section className="surface-card surface-card--contained">
       <div className="section-heading">
         <div>
           <p className="section-heading__eyebrow">Preview</p>
