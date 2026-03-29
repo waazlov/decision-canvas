@@ -1,24 +1,39 @@
 :root {
   color-scheme: light;
-  --font-sans: "Segoe UI", "Inter", "Helvetica Neue", Arial, sans-serif;
-  --page-bg: #f5f7fb;
-  --surface-bg: rgba(255, 255, 255, 0.82);
+  --font-sans: "Manrope", "Plus Jakarta Sans", "Aptos", "Segoe UI", sans-serif;
+  --font-display: "Manrope", "Plus Jakarta Sans", "Aptos", "Segoe UI", sans-serif;
+
+  --page-bg: #f6f8fc;
+  --page-bg-strong: #eef2f8;
+  --surface-bg: rgba(255, 255, 255, 0.92);
   --surface-strong: #ffffff;
+  --surface-muted: #f8fafc;
   --surface-border: rgba(15, 23, 42, 0.08);
-  --surface-shadow: 0 18px 40px rgba(15, 23, 42, 0.08);
-  --text-strong: #111827;
-  --text-body: #344054;
-  --text-muted: #667085;
-  --accent: #0f62fe;
-  --accent-strong: #0043ce;
-  --accent-soft: rgba(15, 98, 254, 0.12);
+  --surface-border-strong: rgba(84, 97, 122, 0.14);
+  --surface-shadow: 0 20px 50px rgba(15, 23, 42, 0.08);
+  --surface-shadow-soft: 0 10px 24px rgba(15, 23, 42, 0.05);
+
+  --text-strong: #0f172a;
+  --text-body: #334155;
+  --text-muted: #64748b;
+  --text-soft: #94a3b8;
+
+  --accent: #2563eb;
+  --accent-strong: #1d4ed8;
+  --accent-soft: rgba(37, 99, 235, 0.1);
+  --accent-violet: #7c3aed;
+  --accent-violet-soft: rgba(124, 58, 237, 0.12);
+
   --success: #027a48;
   --danger: #b42318;
   --warning: #b54708;
+
+  --radius-2xl: 32px;
   --radius-xl: 24px;
   --radius-lg: 18px;
   --radius-md: 14px;
   --radius-sm: 10px;
+
   --space-2: 0.5rem;
   --space-3: 0.75rem;
   --space-4: 1rem;
@@ -27,5 +42,8 @@
   --space-8: 2rem;
   --space-10: 2.5rem;
   --space-12: 3rem;
-  --max-width: 1240px;
+  --space-14: 3.5rem;
+  --space-16: 4rem;
+
+  --max-width: 1248px;
 }

@@ -2,11 +2,11 @@ import type { Finding } from "../../types/contracts";
 
 export function FindingsPanel({ findings }: { findings: Finding[] }) {
   return (
-    <section className="surface-card">
+    <section className="surface-card findings-panel">
       <div className="section-heading">
         <div>
-          <p className="section-heading__eyebrow">Key findings</p>
-          <h2>What matters most</h2>
+          <p className="section-heading__eyebrow">Supporting findings</p>
+          <h2>What else matters</h2>
         </div>
       </div>
 
@@ -16,10 +16,13 @@ export function FindingsPanel({ findings }: { findings: Finding[] }) {
         </div>
       ) : (
         <div className="finding-list">
-          {findings.map((finding) => (
+          {findings.slice(0, 4).map((finding) => (
             <article className="finding-card" key={finding.id}>
               <div className="finding-card__header">
-                <h3>{finding.title}</h3>
+                <div>
+                  <p className="finding-card__eyebrow">{finding.type.replace(/_/g, " ")}</p>
+                  <h3>{finding.title}</h3>
+                </div>
                 <span className={`pill pill--${finding.confidence}`}>
                   {finding.confidence} confidence
                 </span>

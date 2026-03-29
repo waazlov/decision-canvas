@@ -118,10 +118,11 @@ export function ChartRenderer({ chart }: { chart: ChartSpec }) {
     <article className="surface-card chart-card">
       <div className="chart-card__header">
         <div>
+          <p className="chart-card__eyebrow">{chart.template.replace("_", " ")}</p>
           <h3>{chart.title}</h3>
           {chart.subtitle ? <p>{chart.subtitle}</p> : null}
         </div>
-        <span className="pill pill--neutral">{chart.template.replace("_", " ")}</span>
+        <span className="pill pill--neutral">{chart.series.length} series</span>
       </div>
 
       {content}

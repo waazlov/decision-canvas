@@ -27,9 +27,15 @@ export function RecommendationsPanel({
           <p>No recommendation is available until the analysis surfaces evidence-backed findings.</p>
         </div>
       ) : (
-        <ol className="recommendation-list">
+        <ol className="recommendation-list recommendation-list--cards">
           {recommendations.map((item) => (
-            <li key={item}>{item}</li>
+            <li className="recommendation-card" key={item}>
+              <span className="recommendation-card__index" aria-hidden="true" />
+              <div>
+                <strong>Next action</strong>
+                <p>{item}</p>
+              </div>
+            </li>
           ))}
         </ol>
       )}

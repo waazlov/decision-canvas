@@ -6,6 +6,7 @@ import { KpiGrid } from "../components/dashboard/KpiGrid";
 import { SummaryPanel } from "../components/dashboard/SummaryPanel";
 import { ChartsSection } from "../components/dashboard/ChartsSection";
 import { RecommendationsPanel } from "../components/dashboard/RecommendationsPanel";
+import { HeroInsightCard } from "../components/dashboard/HeroInsightCard";
 import { useWorkspace } from "../app/WorkspaceContext";
 import { sampleDashboard } from "../types/mockData";
 
@@ -21,6 +22,8 @@ export function ResultsPage() {
   const activeDashboard = dashboard ?? sampleDashboard;
   const hasCharts = activeDashboard.charts.length > 0;
   const hasFindings = activeDashboard.findings.length > 0;
+  const leadFinding = activeDashboard.findings[0] ?? null;
+  const supportingFindings = activeDashboard.findings.slice(1);
   const interpretation = activeDashboard.interpreted_question;
   const interpretationParts = [
     `Detected intent: ${formatLabel(interpretation.intent)}`,
@@ -78,6 +81,7 @@ export function ResultsPage() {
       </section>
 
       <KpiGrid kpis={activeDashboard.kpis} />
+      <HeroInsightCard finding={leadFinding} />
 
       {profile ? (
         <section className="surface-card dataset-context">
@@ -92,11 +96,6 @@ export function ResultsPage() {
           </div>
         </section>
       ) : null}
-
-      <div className="results-top-grid results-top-grid--priority">
-        <FindingsPanel findings={activeDashboard.findings} />
-        <SummaryPanel summary={activeDashboard.executive_summary} />
-      </div>
 
       {hasCharts ? (
         <ChartsSection charts={activeDashboard.charts} />
@@ -117,6 +116,11 @@ export function ResultsPage() {
           </div>
         </section>
       )}
+
+      <div className="results-top-grid results-top-grid--priority">
+        <FindingsPanel findings={supportingFindings} />
+        <SummaryPanel summary={activeDashboard.executive_summary} />
+      </div>
 
       <RecommendationsPanel
         findings={activeDashboard.findings}

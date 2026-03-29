@@ -1,5 +1,9 @@
 import { Link, useLocation } from "react-router-dom";
 import type { PropsWithChildren } from "react";
+import { useNavigate } from "react-router-dom";
+
+import { BrandMark } from "./BrandMark";
+import { useWorkspace } from "../../app/WorkspaceContext";
 
 function NavLink({ to, label }: { to: string; label: string }) {
   const location = useLocation();
@@ -13,13 +17,15 @@ function NavLink({ to, label }: { to: string; label: string }) {
 }
 
 export function AppShell({ children }: PropsWithChildren) {
+  const navigate = useNavigate();
+  const { prepareDemoWorkspace } = useWorkspace();
+
   return (
     <div className="app-shell">
       <header className="topbar">
         <div className="topbar__inner">
           <Link className="brand" to="/">
-            <span className="brand__mark">DC</span>
-            <span className="brand__text">DecisionCanvas</span>
+            <BrandMark />
           </Link>
 
           <nav className="topbar__nav" aria-label="Primary">
@@ -28,9 +34,21 @@ export function AppShell({ children }: PropsWithChildren) {
             <NavLink to="/results" label="Results" />
           </nav>
 
-          <Link className="button button--primary button--compact" to="/workspace">
-            Upload dataset
-          </Link>
+          <div className="topbar__actions">
+            <button
+              className="button button--ghost button--compact"
+              type="button"
+              onClick={async () => {
+                await prepareDemoWorkspace();
+                navigate("/workspace");
+              }}
+            >
+              Try demo
+            </button>
+            <Link className="button button--primary button--compact" to="/workspace">
+              Upload dataset
+            </Link>
+          </div>
         </div>
       </header>
 

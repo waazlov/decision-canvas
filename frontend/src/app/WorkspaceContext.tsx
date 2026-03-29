@@ -34,6 +34,7 @@ interface WorkspaceContextValue {
   setQuestion: (question: string) => void;
   selectFile: (file: File | null) => Promise<void>;
   useSampleDataset: () => Promise<void>;
+  prepareDemoWorkspace: () => Promise<void>;
   startDemoMode: () => void;
   runAnalysis: () => Promise<DashboardPayload | null>;
   resetWorkspace: () => void;
@@ -145,6 +146,14 @@ export function WorkspaceProvider({ children }: PropsWithChildren) {
     await selectFile(sampleFile);
   }
 
+  async function prepareDemoWorkspace() {
+    await useSampleDataset();
+    setQuestion("Why did conversion drop last month?");
+    setMode("live");
+    setDashboard(null);
+    setError(null);
+  }
+
   function startDemoMode() {
     setMode("demo");
     setFile(null);
@@ -185,6 +194,7 @@ export function WorkspaceProvider({ children }: PropsWithChildren) {
         setQuestion,
         selectFile,
         useSampleDataset,
+        prepareDemoWorkspace,
         startDemoMode,
         runAnalysis,
         resetWorkspace,

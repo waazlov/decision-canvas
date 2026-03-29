@@ -19,6 +19,9 @@ export function UploadPanel({
         <div>
           <p className="section-heading__eyebrow">Step 1</p>
           <h2>Upload a CSV dataset</h2>
+          <p className="upload-panel__lede">
+            Start with a business dataset that includes time, metrics, and a few segment dimensions.
+          </p>
         </div>
         <div className="upload-panel__actions">
           <span className="pill">CSV only</span>
@@ -45,6 +48,9 @@ export function UploadPanel({
         <span className="upload-dropzone__title">Drop a CSV here or click to browse</span>
         <span className="upload-dropzone__body">
           DecisionCanvas profiles fields, validates quality, and prepares the dataset for analysis.
+        </span>
+        <span className="upload-dropzone__hint">
+          Best for revenue, orders, conversion, session, channel, region, category, team, or performance data.
         </span>
         <span className="upload-dropzone__meta">
           {isLoading
