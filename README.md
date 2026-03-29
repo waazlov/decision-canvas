@@ -160,6 +160,7 @@ Expected response:
 This repo includes:
 
 - [`frontend/.env.example`](C:\Users\waazlov\Documents\Work\Codex Project\decision-canvas\frontend\.env.example)
+- [`frontend/vercel.json`](C:\Users\waazlov\Documents\Work\Codex Project\decision-canvas\frontend\vercel.json)
 
 Deploy with these steps:
 
@@ -170,6 +171,8 @@ Deploy with these steps:
 - Framework Preset: `Vite`
 - Build Command: `npm run build`
 - Output Directory: `dist`
+
+The included `vercel.json` rewrites SPA routes such as `/workspace` and `/results` back to `index.html`, so direct loads and refreshes do not return `404 NOT_FOUND`.
 
 3. Set the required environment variable:
 
