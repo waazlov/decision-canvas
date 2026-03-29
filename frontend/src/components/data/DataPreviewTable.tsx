@@ -7,13 +7,14 @@ interface DataPreviewTableProps {
 export function DataPreviewTable({ profile }: DataPreviewTableProps) {
   const rows = profile?.preview_rows ?? [];
   const columns = rows.length > 0 ? Object.keys(rows[0]) : [];
+  const heading = profile ? `${profile.dataset_name} preview` : "Dataset preview";
 
   return (
     <section className="surface-card surface-card--contained">
       <div className="section-heading">
         <div>
           <p className="section-heading__eyebrow">Preview</p>
-          <h2>Dataset sample</h2>
+          <h2>{heading}</h2>
         </div>
         {profile ? <span className="pill">{profile.row_count.toLocaleString()} rows</span> : null}
       </div>
