@@ -6,6 +6,8 @@ export const sampleDashboard: DashboardPayload = {
   interpreted_question: {
     raw_question: "Why did conversion drop last month?",
     intent: "trend_analysis",
+    requested_metric: "conversion",
+    requested_dimension: null,
     metric: "conversion",
     dimension: null,
     direction: "drop",

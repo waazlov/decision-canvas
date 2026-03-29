@@ -38,7 +38,7 @@ def prepare_analysis_frame(dataframe: pd.DataFrame) -> tuple[pd.DataFrame, dict[
         if working_frame[date_column].notna().any():
             assumptions.append(f"'{date_column}' is used as the primary time dimension.")
 
-    for business_field in ("revenue", "orders", "sessions"):
+    for business_field in ("revenue", "orders", "sessions", "performance"):
         if business_field in field_map:
             column = field_map[business_field]
             working_frame[column] = pd.to_numeric(working_frame[column], errors="coerce")
@@ -73,7 +73,7 @@ def prepare_analysis_frame(dataframe: pd.DataFrame) -> tuple[pd.DataFrame, dict[
 
 
 def pick_primary_metric(field_map: dict[str, str]) -> str | None:
-    for business_field in ("revenue", "conversion", "orders", "sessions", "aov"):
+    for business_field in ("revenue", "conversion", "orders", "sessions", "aov", "performance"):
         if business_field in field_map:
             return business_field
     return None
@@ -87,6 +87,7 @@ def pick_metric_for_question(field_map: dict[str, str], question: str) -> str | 
         ("orders", ("orders", "purchases")),
         ("sessions", ("sessions", "traffic", "visits")),
         ("aov", ("aov", "average order value", "avg order value")),
+        ("performance", ("performance", "score", "productivity")),
     )
 
     for metric, keywords in priority_by_keyword:
@@ -113,7 +114,7 @@ def summarize_kpis(
     kpis: list[dict[str, Any]] = []
     date_column = field_map.get("date")
 
-    for business_field in ("revenue", "orders", "sessions", "conversion", "aov"):
+    for business_field in ("revenue", "orders", "sessions", "conversion", "aov", "performance"):
         column = field_map.get(business_field)
         if not column or column not in dataframe.columns:
             continue

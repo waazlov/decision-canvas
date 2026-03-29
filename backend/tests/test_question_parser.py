@@ -48,3 +48,26 @@ def test_low_confidence_questions_fall_back_to_overview() -> None:
     assert interpretation.intent == QuestionIntent.OVERVIEW
     assert interpretation.fallback_used
     assert plan.fallback_used
+
+
+def test_explicit_missing_metric_does_not_substitute_revenue() -> None:
+    dataframe = pd.DataFrame(
+        {
+            "invoiceDate": pd.date_range("2024-01-01", periods=8, freq="D"),
+            "revenue": [100, 120, 110, 130, 125, 140, 150, 145],
+            "region": ["East", "West", "East", "West", "East", "West", "East", "West"],
+        }
+    )
+    analysis_frame, field_map, _assumptions = prepare_analysis_frame(dataframe)
+
+    interpretation = parse_question("How are sessions trending week over week?", analysis_frame, field_map)
+    plan = route_question(interpretation)
+    dashboard = build_dashboard(dataframe, dataset_name="retail.csv", question="How are sessions trending week over week?")
+
+    assert interpretation.requested_metric == "sessions"
+    assert interpretation.metric is None
+    assert interpretation.fallback_used
+    assert plan.steps == []
+    assert dashboard.findings == []
+    assert dashboard.interpreted_question.metric is None
+    assert "does not contain the requested sessions metric" in dashboard.executive_summary.what_happened

@@ -38,6 +38,8 @@ export type QuestionDirection =
 export type QuestionTimeScope =
   | "last_week"
   | "last_month"
+  | "week_over_week"
+  | "month_over_month"
   | "recent"
   | "over_time"
   | "all_time"
@@ -170,6 +172,8 @@ export interface ExecutiveSummary {
 export interface QuestionInterpretation {
   raw_question: string;
   intent: QuestionIntent;
+  requested_metric?: string | null;
+  requested_dimension?: string | null;
   metric?: string | null;
   dimension?: string | null;
   direction: QuestionDirection;

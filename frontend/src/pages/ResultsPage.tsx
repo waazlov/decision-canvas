@@ -25,7 +25,13 @@ export function ResultsPage() {
   const interpretationParts = [
     `Detected intent: ${formatLabel(interpretation.intent)}`,
     interpretation.metric ? `Metric: ${formatLabel(interpretation.metric)}` : null,
+    !interpretation.metric && interpretation.requested_metric
+      ? `Requested metric: ${formatLabel(interpretation.requested_metric)}`
+      : null,
     interpretation.dimension ? `Dimension: ${formatLabel(interpretation.dimension)}` : null,
+    !interpretation.dimension && interpretation.requested_dimension
+      ? `Requested dimension: ${formatLabel(interpretation.requested_dimension)}`
+      : null,
     interpretation.time_scope !== "unspecified"
       ? `Time scope: ${formatLabel(interpretation.time_scope)}`
       : null,

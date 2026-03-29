@@ -32,6 +32,8 @@ class QuestionDirection(str, Enum):
 class QuestionTimeScope(str, Enum):
     LAST_WEEK = "last_week"
     LAST_MONTH = "last_month"
+    WEEK_OVER_WEEK = "week_over_week"
+    MONTH_OVER_MONTH = "month_over_month"
     RECENT = "recent"
     OVER_TIME = "over_time"
     ALL_TIME = "all_time"
@@ -41,6 +43,8 @@ class QuestionTimeScope(str, Enum):
 class QuestionInterpretation(StrictBaseModel):
     raw_question: str
     intent: QuestionIntent
+    requested_metric: str | None = None
+    requested_dimension: str | None = None
     metric: str | None = None
     dimension: str | None = None
     direction: QuestionDirection = QuestionDirection.NEUTRAL

@@ -102,6 +102,9 @@ DIMENSION_ALIASES: dict[str, tuple[str, ...]] = {
     "device": ("device", "devices", "platform", "mobile", "desktop", "tablet"),
     "category": ("category", "categories", "product category", "segment", "segments", "plan"),
     "channel": ("channel", "channels", "source", "sources", "campaign", "campaigns"),
+    "employee": ("employee", "employees", "rep", "reps", "agent", "agents", "seller", "owner"),
+    "team": ("team", "teams", "group", "groups", "squad", "squads"),
+    "department": ("department", "departments", "function", "business unit"),
     "stage": ("stage", "stages", "step", "steps", "funnel stage"),
 }
 
@@ -111,9 +114,12 @@ METRIC_ALIASES: dict[str, tuple[str, ...]] = {
     "sessions": ("sessions", "traffic", "visits", "users", "visitors"),
     "conversion": ("conversion", "conversion rate", "cvr", "cv rate", "checkout rate"),
     "aov": ("aov", "average order value", "avg order value"),
+    "performance": ("performance", "performance score", "score", "productivity"),
 }
 
 TIME_SCOPE_PATTERNS: tuple[tuple[QuestionTimeScope, tuple[str, ...]], ...] = (
+    (QuestionTimeScope.WEEK_OVER_WEEK, ("week over week", "wow", "week-on-week")),
+    (QuestionTimeScope.MONTH_OVER_MONTH, ("month over month", "mom", "month-on-month")),
     (QuestionTimeScope.LAST_WEEK, ("last week", "past week", "weekly")),
     (QuestionTimeScope.LAST_MONTH, ("last month", "past month", "monthly")),
     (QuestionTimeScope.RECENT, ("recent", "recently", "latest", "just changed")),
@@ -180,7 +186,17 @@ def _extract_direction(intent: QuestionIntent, question_lower: str) -> QuestionD
     return QuestionDirection.NEUTRAL
 
 
-def _extract_business_field(
+def _extract_requested_business_field(
+    question_lower: str,
+    aliases_by_field: dict[str, Iterable[str]],
+) -> str | None:
+    for business_field, aliases in aliases_by_field.items():
+        if any(alias in question_lower for alias in aliases):
+            return business_field
+    return None
+
+
+def _resolve_available_business_field(
     question_lower: str,
     field_map: dict[str, str],
     aliases_by_field: dict[str, Iterable[str]],
@@ -192,11 +208,18 @@ def _extract_business_field(
 
 
 def _candidate_dimensions(field_map: dict[str, str]) -> list[str]:
-    ordered = ["region", "device", "category", "channel", "stage"]
+    ordered = ["region", "device", "category", "channel", "employee", "team", "department", "stage"]
     return [dimension for dimension in ordered if dimension in field_map]
 
 
-def _extract_dimension(question_lower: str, field_map: dict[str, str]) -> str | None:
+def _extract_requested_dimension(question_lower: str) -> str | None:
+    for dimension, aliases in DIMENSION_ALIASES.items():
+        if any(alias in question_lower for alias in aliases):
+            return dimension
+    return None
+
+
+def _resolve_available_dimension(question_lower: str, field_map: dict[str, str]) -> str | None:
     for dimension, aliases in DIMENSION_ALIASES.items():
         if dimension in field_map and any(alias in question_lower for alias in aliases):
             return dimension
@@ -244,25 +267,37 @@ def parse_question(
     notes: list[str] = []
 
     intent, intent_score = _pick_intent(question_lower)
-    metric = _extract_business_field(question_lower, field_map, METRIC_ALIASES)
-    dimension = _extract_dimension(question_lower, field_map)
+    requested_metric = _extract_requested_business_field(question_lower, METRIC_ALIASES)
+    metric = _resolve_available_business_field(question_lower, field_map, METRIC_ALIASES)
+    requested_dimension = _extract_requested_dimension(question_lower)
+    dimension = _resolve_available_dimension(question_lower, field_map)
     direction = _extract_direction(intent, question_lower)
     time_scope = _extract_time_scope(question_lower)
 
-    if metric is None and intent in {
+    if requested_metric and requested_metric not in field_map:
+        notes.append(
+            f"The dataset does not include a supported '{requested_metric}' metric, so the requested analysis could not be answered directly."
+        )
+
+    if requested_dimension and requested_dimension not in field_map:
+        notes.append(
+            f"The dataset does not include a supported '{requested_dimension}' dimension, so the requested analysis could not be segmented as asked."
+        )
+
+    if metric is None and requested_metric is None and intent in {
         QuestionIntent.TREND_ANALYSIS,
         QuestionIntent.SEGMENT_BEST,
         QuestionIntent.SEGMENT_WORST,
         QuestionIntent.METRIC_COMPARISON,
         QuestionIntent.ANOMALY_DETECTION,
     }:
-        for fallback_metric in ("revenue", "conversion", "orders", "sessions", "aov"):
+        for fallback_metric in ("revenue", "conversion", "orders", "sessions", "aov", "performance"):
             if fallback_metric in field_map:
                 metric = fallback_metric
                 notes.append(f"No explicit metric was found in the question; using '{fallback_metric}'.")
                 break
 
-    if dimension is None and intent in {
+    if dimension is None and requested_dimension is None and intent in {
         QuestionIntent.SEGMENT_BEST,
         QuestionIntent.SEGMENT_WORST,
         QuestionIntent.METRIC_COMPARISON,
@@ -294,6 +329,12 @@ def parse_question(
         fallback_used = True
         confidence = ConfidenceLevel.LOW
         notes.append("A funnel question was detected, but the dataset does not include both sessions and orders.")
+    elif requested_metric and requested_metric not in field_map:
+        fallback_used = True
+        confidence = ConfidenceLevel.LOW
+    elif requested_dimension and requested_dimension not in field_map:
+        fallback_used = True
+        confidence = ConfidenceLevel.LOW
     elif metric is None and intent != QuestionIntent.OVERVIEW:
         confidence = ConfidenceLevel.MEDIUM
         notes.append("The requested metric was not available, so the analysis uses the strongest available fallback metric.")
@@ -303,6 +344,8 @@ def parse_question(
     return QuestionInterpretation(
         raw_question=raw_question,
         intent=intent,
+        requested_metric=requested_metric,
+        requested_dimension=requested_dimension,
         metric=metric,
         dimension=dimension,
         direction=direction,

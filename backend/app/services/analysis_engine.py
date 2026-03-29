@@ -25,6 +25,10 @@ def _period_granularity(date_series: pd.Series) -> str:
 
 
 def _granularity_for_scope(date_series: pd.Series, time_scope: QuestionTimeScope, question: str) -> str:
+    if time_scope == QuestionTimeScope.WEEK_OVER_WEEK:
+        return "W"
+    if time_scope == QuestionTimeScope.MONTH_OVER_MONTH:
+        return "M"
     if time_scope == QuestionTimeScope.LAST_MONTH:
         return "M"
     if time_scope == QuestionTimeScope.LAST_WEEK:

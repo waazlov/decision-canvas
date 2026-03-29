@@ -9,6 +9,22 @@ from app.models.question import (
 
 
 def route_question(interpretation: QuestionInterpretation) -> AnalysisPlan:
+    if interpretation.fallback_used and (
+        (interpretation.requested_metric and interpretation.metric != interpretation.requested_metric)
+        or (interpretation.requested_dimension and interpretation.dimension != interpretation.requested_dimension)
+    ):
+        return AnalysisPlan(
+            intent=QuestionIntent.OVERVIEW,
+            metric=interpretation.metric,
+            dimension=interpretation.dimension,
+            direction=interpretation.direction,
+            time_scope=interpretation.time_scope,
+            comparison_targets=interpretation.comparison_targets,
+            steps=[],
+            fallback_used=True,
+            notes=interpretation.notes,
+        )
+
     if interpretation.fallback_used or interpretation.intent == QuestionIntent.OVERVIEW:
         return AnalysisPlan(
             intent=QuestionIntent.OVERVIEW,

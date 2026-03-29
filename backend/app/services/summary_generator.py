@@ -12,6 +12,38 @@ def build_executive_summary(
     interpretation: QuestionInterpretation,
 ) -> ExecutiveSummary:
     if not findings:
+        if interpretation.requested_metric and interpretation.requested_metric != interpretation.metric:
+            return ExecutiveSummary(
+                what_happened=(
+                    f"The dataset was profiled successfully, but it does not contain the requested "
+                    f"{interpretation.requested_metric.replace('_', ' ')} metric."
+                ),
+                why_it_likely_happened="The uploaded data does not expose the metric needed to answer this question directly.",
+                what_to_do_next=[
+                    "Use one of the detected metrics shown in the schema summary.",
+                    "Try a question about available fields such as revenue, orders, conversion, or performance.",
+                ],
+                assumptions=assumptions,
+                uncertainty_notes=[
+                    "DecisionCanvas did not substitute a different metric because that would risk a misleading answer."
+                ],
+            )
+        if interpretation.requested_dimension and interpretation.requested_dimension != interpretation.dimension:
+            return ExecutiveSummary(
+                what_happened=(
+                    f"The dataset was profiled successfully, but it does not contain the requested "
+                    f"{interpretation.requested_dimension.replace('_', ' ')} dimension."
+                ),
+                why_it_likely_happened="The uploaded data does not expose the segmentation field needed to answer this question directly.",
+                what_to_do_next=[
+                    "Use one of the detected dimensions shown in the schema summary.",
+                    "Try a question using available dimensions such as region, category, channel, employee, or team.",
+                ],
+                assumptions=assumptions,
+                uncertainty_notes=[
+                    "DecisionCanvas did not substitute a different dimension because that would risk a misleading answer."
+                ],
+            )
         return ExecutiveSummary(
             what_happened="The dataset was profiled successfully, but there was not enough structured evidence to produce a strong finding for the selected question.",
             why_it_likely_happened=(

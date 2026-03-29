@@ -8,15 +8,19 @@ from app.models.dataset import SemanticRole
 
 BUSINESS_FIELD_SYNONYMS: dict[str, tuple[str, ...]] = {
     "revenue": ("revenue", "sales", "gmv", "arr", "mrr", "amount", "net_sales"),
-    "orders": ("orders", "order_count", "transactions", "purchases"),
+    "orders": ("orders", "order_count", "transactions", "purchases", "deals", "tickets_resolved"),
     "sessions": ("sessions", "visits", "traffic", "users", "visitors"),
     "conversion": ("conversion", "conversion_rate", "cv_rate", "cvr"),
     "aov": ("aov", "average_order_value", "avg_order_value"),
+    "performance": ("performance", "performance_score", "score", "productivity", "productivity_score"),
     "date": ("date", "day", "week", "month", "timestamp", "order_date"),
     "device": ("device", "platform", "os", "device_type"),
     "region": ("region", "country", "market", "state", "territory", "geo"),
     "category": ("category", "product_category", "segment", "vertical", "plan"),
     "channel": ("channel", "source", "traffic_source", "acquisition_channel"),
+    "employee": ("employee", "employee_name", "rep", "representative", "agent", "owner", "seller"),
+    "team": ("team", "squad", "group"),
+    "department": ("department", "function", "business_unit", "org"),
     "stage": ("stage", "step", "funnel_stage", "status"),
 }
 
@@ -49,7 +53,7 @@ def infer_semantic_role(
         return SemanticRole.TIME_DIMENSION
     if business_field == "stage":
         return SemanticRole.FUNNEL_STAGE
-    if business_field in {"revenue", "orders", "sessions", "conversion", "aov"}:
+    if business_field in {"revenue", "orders", "sessions", "conversion", "aov", "performance"}:
         return SemanticRole.METRIC
     if detected_type in {"integer", "float"} and high_cardinality_ratio > 0.9:
         return SemanticRole.IDENTIFIER
