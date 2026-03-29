@@ -8,10 +8,13 @@ import {
 
 import { analyzeDataset, loadSampleDatasetFile, profileDataset } from "../services/api";
 import type { DashboardPayload, DatasetProfile } from "../types/contracts";
+import { sampleDashboard } from "../types/mockData";
 
 const STORAGE_KEY = "decisioncanvas.workspace";
+type WorkspaceMode = "live" | "demo";
 
 interface StoredWorkspaceState {
+  mode: WorkspaceMode;
   fileName: string | null;
   question: string;
   profile: DatasetProfile | null;
@@ -19,6 +22,7 @@ interface StoredWorkspaceState {
 }
 
 interface WorkspaceContextValue {
+  mode: WorkspaceMode;
   file: File | null;
   fileName: string | null;
   question: string;
@@ -30,6 +34,7 @@ interface WorkspaceContextValue {
   setQuestion: (question: string) => void;
   selectFile: (file: File | null) => Promise<void>;
   useSampleDataset: () => Promise<void>;
+  startDemoMode: () => void;
   runAnalysis: () => Promise<DashboardPayload | null>;
   resetWorkspace: () => void;
 }
@@ -38,23 +43,24 @@ const WorkspaceContext = createContext<WorkspaceContextValue | null>(null);
 
 function loadStoredState(): StoredWorkspaceState {
   if (typeof window === "undefined") {
-    return { fileName: null, question: "", profile: null, dashboard: null };
+    return { mode: "live", fileName: null, question: "", profile: null, dashboard: null };
   }
 
   const raw = window.sessionStorage.getItem(STORAGE_KEY);
   if (!raw) {
-    return { fileName: null, question: "", profile: null, dashboard: null };
+    return { mode: "live", fileName: null, question: "", profile: null, dashboard: null };
   }
 
   try {
     return JSON.parse(raw) as StoredWorkspaceState;
   } catch {
-    return { fileName: null, question: "", profile: null, dashboard: null };
+    return { mode: "live", fileName: null, question: "", profile: null, dashboard: null };
   }
 }
 
 export function WorkspaceProvider({ children }: PropsWithChildren) {
   const initial = loadStoredState();
+  const [mode, setMode] = useState<WorkspaceMode>(initial.mode ?? "live");
   const [file, setFile] = useState<File | null>(null);
   const [fileName, setFileName] = useState<string | null>(initial.fileName);
   const [question, setQuestion] = useState<string>(
@@ -72,15 +78,17 @@ export function WorkspaceProvider({ children }: PropsWithChildren) {
     }
 
     const snapshot: StoredWorkspaceState = {
+      mode,
       fileName,
       question,
       profile,
       dashboard,
     };
     window.sessionStorage.setItem(STORAGE_KEY, JSON.stringify(snapshot));
-  }, [dashboard, fileName, profile, question]);
+  }, [dashboard, fileName, mode, profile, question]);
 
   async function selectFile(nextFile: File | null) {
+    setMode("live");
     setFile(nextFile);
     setFileName(nextFile?.name ?? null);
     setDashboard(null);
@@ -117,6 +125,7 @@ export function WorkspaceProvider({ children }: PropsWithChildren) {
 
     setIsAnalyzing(true);
     setError(null);
+    setMode("live");
     try {
       const nextDashboard = await analyzeDataset(file, question);
       setDashboard(nextDashboard);
@@ -136,7 +145,20 @@ export function WorkspaceProvider({ children }: PropsWithChildren) {
     await selectFile(sampleFile);
   }
 
+  function startDemoMode() {
+    setMode("demo");
+    setFile(null);
+    setFileName(sampleDashboard.dataset_profile.dataset_name);
+    setQuestion(sampleDashboard.question);
+    setProfile(sampleDashboard.dataset_profile);
+    setDashboard(sampleDashboard);
+    setError(null);
+    setIsProfiling(false);
+    setIsAnalyzing(false);
+  }
+
   function resetWorkspace() {
+    setMode("live");
     setFile(null);
     setFileName(null);
     setProfile(null);
@@ -151,6 +173,7 @@ export function WorkspaceProvider({ children }: PropsWithChildren) {
   return (
     <WorkspaceContext.Provider
       value={{
+        mode,
         file,
         fileName,
         question,
@@ -162,6 +185,7 @@ export function WorkspaceProvider({ children }: PropsWithChildren) {
         setQuestion,
         selectFile,
         useSampleDataset,
+        startDemoMode,
         runAnalysis,
         resetWorkspace,
       }}

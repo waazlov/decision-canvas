@@ -17,6 +17,7 @@ const exampleQuestions = [
 export function WorkspacePage() {
   const navigate = useNavigate();
   const {
+    mode,
     fileName,
     question,
     profile,
@@ -25,6 +26,7 @@ export function WorkspacePage() {
     isAnalyzing,
     setQuestion,
     selectFile,
+    startDemoMode,
     useSampleDataset,
     runAnalysis,
     resetWorkspace,
@@ -58,8 +60,17 @@ export function WorkspacePage() {
             fileName={fileName ?? undefined}
             isLoading={isProfiling}
             onFileSelect={selectFile}
+            onStartDemoMode={() => {
+              startDemoMode();
+              navigate("/results");
+            }}
             onUseSample={useSampleDataset}
           />
+          {mode === "demo" ? (
+            <div className="status-banner">
+              Demo mode is active. The dashboard can be shown instantly without waiting for the backend to wake up.
+            </div>
+          ) : null}
           {isProfiling ? (
             <div className="status-banner">Profiling dataset and validating inferred fields...</div>
           ) : null}
@@ -80,6 +91,18 @@ export function WorkspacePage() {
             <div className="status-banner">Generating decision-ready dashboard...</div>
           ) : null}
           {error ? <div className="error-banner">{error}</div> : null}
+          {error ? (
+            <button
+              className="button button--secondary"
+              type="button"
+              onClick={() => {
+                startDemoMode();
+                navigate("/results");
+              }}
+            >
+              Continue in demo mode
+            </button>
+          ) : null}
         </div>
 
         <div className="stack-lg">

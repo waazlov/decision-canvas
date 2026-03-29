@@ -1,6 +1,7 @@
 interface UploadPanelProps {
   fileName?: string;
   isLoading?: boolean;
+  onStartDemoMode?: () => void;
   onUseSample?: () => void;
   onFileSelect?: (file: File | null) => void;
 }
@@ -8,6 +9,7 @@ interface UploadPanelProps {
 export function UploadPanel({
   fileName,
   isLoading = false,
+  onStartDemoMode,
   onUseSample,
   onFileSelect,
 }: UploadPanelProps) {
@@ -23,6 +25,11 @@ export function UploadPanel({
           {onUseSample ? (
             <button className="button button--secondary button--compact" type="button" onClick={onUseSample}>
               Use sample dataset
+            </button>
+          ) : null}
+          {onStartDemoMode ? (
+            <button className="button button--secondary button--compact" type="button" onClick={onStartDemoMode}>
+              Demo mode
             </button>
           ) : null}
         </div>

@@ -108,6 +108,8 @@ For the most reliable judging flow, use the **Use sample dataset** button in the
 
 This is the strongest demo path in the current MVP because it consistently produces KPI movement, a clear finding, a supporting chart, an executive summary, and a recommended action.
 
+If your backend is on a free tier and has gone idle, use **Demo mode** instead. Demo mode bypasses the backend entirely and renders the validated sample output instantly, which is useful for contest judging or backup walkthroughs when a cold start would hurt the flow.
+
 ## Deployment
 
 DecisionCanvas is set up for:

@@ -10,7 +10,7 @@ import { useWorkspace } from "../app/WorkspaceContext";
 import { sampleDashboard } from "../types/mockData";
 
 export function ResultsPage() {
-  const { dashboard, profile } = useWorkspace();
+  const { dashboard, mode, profile } = useWorkspace();
   const activeDashboard = dashboard ?? sampleDashboard;
   const hasCharts = activeDashboard.charts.length > 0;
   const hasFindings = activeDashboard.findings.length > 0;
@@ -30,7 +30,11 @@ export function ResultsPage() {
         }
       />
 
-      {!dashboard ? (
+      {mode === "demo" ? (
+        <div className="status-banner">
+          Demo mode is active. This dashboard is rendered from bundled sample output and does not require a live backend.
+        </div>
+      ) : !dashboard ? (
         <div className="status-banner">
           Showing the sample dashboard layout. Upload a dataset and run analysis to see live results.
         </div>
