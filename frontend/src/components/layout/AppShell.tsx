@@ -18,7 +18,7 @@ function NavLink({ to, label }: { to: string; label: string }) {
 
 export function AppShell({ children }: PropsWithChildren) {
   const navigate = useNavigate();
-  const { prepareDemoWorkspace } = useWorkspace();
+  const { startDemoMode } = useWorkspace();
 
   return (
     <div className="app-shell">
@@ -38,9 +38,9 @@ export function AppShell({ children }: PropsWithChildren) {
             <button
               className="button button--ghost button--compact"
               type="button"
-              onClick={async () => {
-                await prepareDemoWorkspace();
-                navigate("/workspace");
+              onClick={() => {
+                startDemoMode();
+                navigate("/results");
               }}
             >
               Try demo

@@ -5,7 +5,7 @@ import { useWorkspace } from "../app/WorkspaceContext";
 
 export function LandingPage() {
   const navigate = useNavigate();
-  const { prepareDemoWorkspace } = useWorkspace();
+  const { startDemoMode } = useWorkspace();
 
   return (
     <div className="stack-xl">
@@ -28,9 +28,9 @@ export function LandingPage() {
             <button
               className="button button--secondary"
               type="button"
-              onClick={async () => {
-                await prepareDemoWorkspace();
-                navigate("/workspace");
+              onClick={() => {
+                startDemoMode();
+                navigate("/results");
               }}
             >
               Try demo
